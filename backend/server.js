@@ -6,15 +6,23 @@ require("dotenv").config();
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: "*" }));
 
+// MongoDB connect
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch(err => console.log("❌ MongoDB Error:", err.message));
 
-app.use("/api", require("./routes/authRoutes"));
+// Routes
+app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/items", require("./routes/itemRoutes"));
 
-app.get("/", (req, res) => res.send("API Running"));
+// Test route
+app.get("/", (req, res) => {
+  res.send("API Running 🚀");
+});
 
-app.listen(5000, () => console.log("Server running"));
+// Dynamic PORT
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
