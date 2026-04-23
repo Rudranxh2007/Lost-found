@@ -1,61 +1,60 @@
-import { useState } from "react";
-import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+const express = require("express");
+const router = express.Router();
 
-const API = "https://lost-found-backend-slyy.onrender.com";
+const User = require("../models/User");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const navigate = useNavigate();
+// REGISTER
+router.post("/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    const existing = await User.findOne({ email });
+    if (existing)
+      return res.status(400).json({ message: "User already exists" });
 
-    try {
-      const res = await axios.post(
-        `${API}/api/auth/login`,
-        form
-      );
+    const hashed = await bcrypt.hash(password, 10);
 
-      localStorage.setItem("token", res.data.token);
-      alert("Login Successful 🚀");
-      navigate("/dashboard");
-    } catch (err) {
-      alert(err.response?.data?.msg || "Error");
-    }
-  };
+    const user = new User({
+      name,
+      email,
+      password: hashed,
+    });
 
-  return (
-    <div className="container">
-      <form className="card" onSubmit={handleSubmit}>
-        <h2>🔐 Login</h2>
+    await user.save();
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) =>
-            setForm({ ...form, email: e.target.value })
-          }
-        />
+    res.json({ message: "Registered successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={(e) =>
-            setForm({ ...form, password: e.target.value })
-          }
-        />
+// LOGIN
+router.post("/login", async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
 
-        <button type="submit">Login</button>
+    if (!user)
+      return res.status(400).json({ message: "User not found" });
 
-        <p>
-          New user? <Link to="/register">Register</Link>
-        </p>
-      </form>
-    </div>
-  );
-}
+    const valid = await bcrypt.compare(
+      req.body.password,
+      user.password
+    );
 
-export default Login;
+    if (!valid)
+      return res.status(400).json({ message: "Invalid credentials" });
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET
+    );
+
+    res.json({ token });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+module.exports = router;
