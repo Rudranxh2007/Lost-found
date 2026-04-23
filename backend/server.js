@@ -1,28 +1,59 @@
 const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-require("dotenv").config();
+const router = express.Router();
+const User = require("../models/User");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-const app = express();
+// REGISTER
+router.post("/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-app.use(express.json());
-app.use(cors({ origin: "*" }));
+    const existing = await User.findOne({ email });
+    if (existing)
+      return res.status(400).json({ message: "User already exists" });
 
-// MongoDB connect
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch(err => console.log("❌ MongoDB Error:", err.message));
+    const hashed = await bcrypt.hash(password, 10);
 
-// Routes
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/items", require("./routes/itemRoutes"));
+    const user = new User({
+      name,
+      email,
+      password: hashed,
+    });
 
-// Test route
-app.get("/", (req, res) => {
-  res.send("API Running 🚀");
+    await user.save();
+
+    res.json({ message: "Registered successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
-// Dynamic PORT
-const PORT = process.env.PORT || 5000;
+// LOGIN
+router.post("/login", async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
 
-app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
+    if (!user)
+      return res.status(400).json({ message: "User not found" });
+
+    const valid = await bcrypt.compare(
+      req.body.password,
+      user.password
+    );
+
+    if (!valid)
+      return res.status(400).json({ message: "Invalid credentials" });
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET
+    );
+
+    res.json({ token });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+module.exports = router;
