@@ -1,35 +1,61 @@
-const express = require("express");
-const router = express.Router();
-const User = require("../models/User");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
 
-// REGISTER
-router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
+const API = "https://lost-found-backend-slyy.onrender.com";
 
-  const existing = await User.findOne({ email });
-  if (existing)
-    return res.status(400).json({ message: "Email already exists" });
+function Login() {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
 
-  const hashed = await bcrypt.hash(password, 10);
-  const user = new User({ name, email, password: hashed });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  await user.save();
-  res.json({ message: "Registered successfully" });
-});
+    try {
+      const res = await axios.post(
+        `${API}/api/auth/login`,
+        form
+      );
 
-// LOGIN
-router.post("/login", async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
+      localStorage.setItem("token", res.data.token);
+      alert("Login Successful 🚀");
+      navigate("/dashboard");
+    } catch (err) {
+      alert(err.response?.data?.msg || "Error");
+    }
+  };
 
-  if (!user) return res.status(400).send("User not found");
+  return (
+    <div className="container">
+      <form className="card" onSubmit={handleSubmit}>
+        <h2>🔐 Login</h2>
 
-  const valid = await bcrypt.compare(req.body.password, user.password);
-  if (!valid) return res.status(401).send("Wrong password");
+        <input
+          type="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={(e) =>
+            setForm({ ...form, email: e.target.value })
+          }
+        />
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-  res.json({ token });
-});
+        <input
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={(e) =>
+            setForm({ ...form, password: e.target.value })
+          }
+        />
 
-module.exports = router;
+        <button type="submit">Login</button>
+
+        <p>
+          New user? <Link to="/register">Register</Link>
+        </p>
+      </form>
+    </div>
+  );
+}
+
+export default Login;
