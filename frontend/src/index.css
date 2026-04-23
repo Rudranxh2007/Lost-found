@@ -1,0 +1,82 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f172a, #020617);
+  color: white;
+}
+
+.container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card {
+  background: rgba(17, 24, 39, 0.8);
+  padding: 30px;
+  border-radius: 16px;
+  width: 320px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: scale(1.02);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: #1f2937;
+  color: white;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(45deg, #06b6d4, #9333ea);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px cyan;
+}
+
+a {
+  color: cyan;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.item {
+  background: #1f2937;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+
+.delete-btn {
+  background: red;
+  margin-top: 5px;
+}
